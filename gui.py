@@ -9,11 +9,11 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.init_ui()
-        self.objWidget = ObjWidget("assets/cube.obj")
+        self.objWidget = ObjWidget("assets/start_cube.obj")
         self.init_objWidget()
 
     def init_ui(self) -> None:
-        self.setWindowIcon(QIcon('images/smtu1.png'))
+        self.setWindowIcon(QIcon('images/smtu_logo.png'))
         self.setWindowTitle("Обзор моделей")
         self.create_actions()
         self.init_menuBar()

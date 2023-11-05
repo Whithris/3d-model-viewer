@@ -18,7 +18,7 @@ class ObjWidget(QOpenGLWidget):
 
     def readFile(self, filepath) -> None:
         for line in open(filepath, "r"):
-            material = None
+            # material = None
             if line.startswith('#'): continue
             values = line.split()
             if not values: continue
