@@ -1,5 +1,7 @@
 from model import Model
 
+import numpy as np
+
 
 def read_obj_file(filepath: str) -> Model:
     vertices = []
@@ -42,4 +44,5 @@ def read_obj_file(filepath: str) -> Model:
                 else:
                     norms.append(0)
             faces.append(face)
-    return Model(vertices, normals, texture_coords, faces)
+    return Model(np.array(vertices), np.array(normals),
+                 np.array(texture_coords), np.array(faces))

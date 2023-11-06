@@ -3,9 +3,11 @@ from PySide6.QtOpenGLWidgets import QOpenGLWidget
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+import numpy as np
+
 
 class Model(QOpenGLWidget):
-    def __init__(self, vertices: list, normals: list, texture_coords: list, faces: list):
+    def __init__(self, vertices: np.array, normals: np.array, texture_coords: np.array, faces: np.array):
         super().__init__()
         self.vertices = vertices
         self.normals = normals
@@ -45,7 +47,7 @@ class Model(QOpenGLWidget):
         glClearColor(120.0/255.0, 120.0/255.0, 120.0/255.0, 1.0)
         self.setMinimumSize(1190, 700)
 
-    def resizeGL(self, width: int, height: int):
+    def resizeGL(self, width: int, height: int) -> None:
         glViewport(0, 0, width, height)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
