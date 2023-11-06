@@ -2,15 +2,15 @@ from PySide6.QtWidgets import *
 from PySide6.QtGui import QIcon, QAction, QGuiApplication
 from PySide6.QtCore import *
 
-from model_loader import ObjWidget
+from model_loader import read_obj_file
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.init_ui()
-        self.objWidget = ObjWidget("assets/start_cube.obj")
-        self.init_objWidget()
+        self.model = read_obj_file("assets/start_cube.obj")
+        self.init_model()
 
     def init_ui(self) -> None:
         self.setWindowIcon(QIcon('images/smtu_logo.png'))
@@ -24,7 +24,7 @@ class MainWindow(QMainWindow):
         y = int(frameGeometry.center().y() - windowFrameGeometry.center().y())
         self.move(x, y)
 
-    def create_actions(self):
+    def create_actions(self) -> None:
         self.openFileAction = QAction('Открыть', triggered=self.open_file)
 
     def init_menuBar(self) -> None:
@@ -32,9 +32,9 @@ class MainWindow(QMainWindow):
         menu = menuBar.addMenu('Файл')
         menu.addAction(self.openFileAction)
 
-    def init_objWidget(self) -> None:
+    def init_model(self) -> None:
         mainLayout = QHBoxLayout()
-        mainLayout.addWidget(self.objWidget)
+        mainLayout.addWidget(self.model)
         centerWidget = QWidget(None)
         centerWidget.setLayout(mainLayout)
         self.setCentralWidget(centerWidget)
@@ -42,5 +42,5 @@ class MainWindow(QMainWindow):
     def open_file(self) -> None:
         filepath, filetype = \
              QFileDialog.getOpenFileName(self, "Выбрать файл", ".", "Object Files(*.obj)")
-        self.objWidget = ObjWidget(filepath)
-        self.init_objWidget()
+        self.model = read_obj_file(filepath)
+        self.init_model()
