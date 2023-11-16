@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def translate(pos):  # матрица перемещения
     tx, ty, tz = pos
     return np.array([

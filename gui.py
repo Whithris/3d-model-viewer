@@ -1,15 +1,27 @@
 from PySide6.QtWidgets import *
-from PySide6.QtGui import QIcon, QAction, QGuiApplication
+from PySide6.QtGui import QIcon, QAction, QKeyEvent
 from PySide6.QtCore import *
 
 from model_loader import read_obj_file
+from camera import *
+from projection import *
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.RES = self.WIDTH, self.HEIGHT = 800, 450
+        self.H_WIDTH, self.H_HEIGHT = self.WIDTH // 2, self.HEIGHT // 2
+        self.camera = Camera(self, [0.5, 1, -4])
+        self.projection = Projection(self)
         self.init_ui()
-        self.model = read_obj_file("assets/start_cube.obj")
+        self.filepath = "assets/start_cube.obj"
+        self.model = read_obj_file(self.filepath, self)
+        self.init_model()
+
+    def keyPressEvent(self, event: QKeyEvent):
+        self.camera.control(event)
+        self.model = read_obj_file(self.filepath, self)
         self.init_model()
 
     def init_ui(self) -> None:
@@ -40,7 +52,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(centerWidget)
 
     def open_file(self) -> None:
-        filepath, filetype = \
-             QFileDialog.getOpenFileName(self, "Выбрать файл", ".", "Object Files(*.obj)")
-        self.model = read_obj_file(filepath)
+        self.filepath, filetype = \
+            QFileDialog.getOpenFileName(self, "Выбрать файл", ".", "Object Files(*.obj)")
+        self.model = read_obj_file(self.filepath, self)
         self.init_model()

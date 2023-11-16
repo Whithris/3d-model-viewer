@@ -1,10 +1,11 @@
 from model import Model
 
-import numpy as np
+from camera import *
+from projection import *
 
 
-def read_obj_file(filepath: str) -> Model:
-    vertices = []
+def read_obj_file(filepath: str, render) -> Model:
+    vertexes = []
     normals = []
     texture_coords = []
     faces = []
@@ -17,7 +18,7 @@ def read_obj_file(filepath: str) -> Model:
         if not values: continue
         if values[0] == 'v':
             v = [float(x) for x in values[1:4]]
-            vertices.append(v)
+            vertexes.append(v)
         elif values[0] == 'vn':
             v = [float(x) for x in values[1:4]]
             normals.append(v)
@@ -44,5 +45,4 @@ def read_obj_file(filepath: str) -> Model:
                 else:
                     norms.append(0)
             faces.append(face)
-    return Model(np.array(vertices), np.array(normals),
-                 np.array(texture_coords), np.array(faces))
+    return Model(render, vertexes, faces)
