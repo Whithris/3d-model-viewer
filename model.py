@@ -8,43 +8,50 @@ import numpy as np
 import matrix_functions as mf
 
 
+def any_func(arr, a, b) -> bool:
+    return np.any((arr == a) | (arr == b))
+
+
 class Model(QOpenGLWidget):
     def __init__(self, render, vertexes: np.array, faces: np.array):
         super().__init__()
         self.render = render
         self.vertexes = np.array([np.array(v + [1]) for v in vertexes])
         self.faces = np.array([np.array(f) for f in faces])
-        print(self, self.vertexes)
 
     def paintGL(self) -> None:
-        vertexes = self.vertexes @ self.render.camera.camera_matrix()
-        vertexes = vertexes @ self.render.projection.projection_matrix
-        vertexes /= vertexes[:, -1:].reshape(-1, 1)
-        vertexes[(vertexes > 2) | (vertexes < -2)] = 0
-        self.vertexes = vertexes @ self.render.projection.to_screen_matrix
+        # vertexes = self.vertexes @ self.render.camera.camera_matrix()
+        # vertexes = vertexes @ self.render.projection.projection_matrix
+        # vertexes /= vertexes[:, -1:].reshape(-1, 1)
+        # vertexes[(vertexes > 2) | (vertexes < -2)] = 0
+        # # self.vertexes = vertexes
+        # self.vertexes = vertexes @ self.render.projection.to_screen_matrix
+        # self.vertexes = self.vertexes[:, :2]
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glPointSize(12)
-        #self.paintCoordsSystem()
         glBegin(GL_POINTS)
         glColor3f(0, 0, 0)
         for vertex in self.vertexes:
-            glVertex4fv(vertex)
+            if not any_func(vertex, self.render.H_WIDTH, self.render.H_HEIGHT):
+                print(vertex)
+                glVertex4fv(vertex)
         glEnd()
         glColor3f(0.3, 0.3, 0.3)
         for face in self.faces:
-            polygon = self.vertexes[np.array([f-1 for f in face])]
-            #print(polygon)
-            glBegin(GL_POLYGON)
-            for p in polygon:
-                #print(p)
-                glVertex4fv(p)
-            glEnd()
+             polygon = self.vertexes[np.array([f-1 for f in face])]
+             glBegin(GL_POLYGON)
+             if not any_func(polygon, self.render.H_WIDTH, self.render.H_HEIGHT):
+                 for p in polygon:
+                    glVertex4fv(p)
+             glEnd()
         glFlush()
-
 
         # glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         # glPointSize(12)
-        # self.paintCoordsSystem()
+        # #self.paintCoordsSystem()
+        # glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        # glPointSize(12)
+        # #self.paintCoordsSystem()
         # glBegin(GL_POINTS)
         # glColor3f(0, 0, 0)
         # for v in self.vertexes:
@@ -54,7 +61,7 @@ class Model(QOpenGLWidget):
         # for edge in self.faces[:-2]:
         #     for vertex in edge:
         #         glColor3f(0.3, 0.3, 0.3)
-        #         glVertex4fv(vertexes[vertex - 1])
+        #         glVertex4fv(self.vertexes[vertex - 1])
         # glEnd()
         # glFlush()
 
