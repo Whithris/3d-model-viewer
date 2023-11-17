@@ -38,12 +38,12 @@ class Model(QOpenGLWidget):
         glEnd()
         glColor3f(0.3, 0.3, 0.3)
         for face in self.faces:
-             polygon = self.vertexes[np.array([f-1 for f in face])]
-             glBegin(GL_POLYGON)
-             if not any_func(polygon, self.render.H_WIDTH, self.render.H_HEIGHT):
-                 for p in polygon:
+            polygon = self.vertexes[np.array([f - 1 for f in face])]
+            glBegin(GL_POLYGON)
+            if not any_func(polygon, self.render.H_WIDTH, self.render.H_HEIGHT):
+                for p in polygon:
                     glVertex4fv(p)
-             glEnd()
+            glEnd()
         glFlush()
 
         # glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
