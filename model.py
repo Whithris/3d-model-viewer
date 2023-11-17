@@ -2,7 +2,8 @@ from PySide6.QtOpenGLWidgets import QOpenGLWidget
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from PySide6.QtGui import QPainter
+from PySide6.QtGui import QPainter, QPen
+from PySide6.QtCore import Qt
 
 import numpy as np
 import matrix_functions as mf
@@ -20,31 +21,32 @@ class Model(QOpenGLWidget):
         self.faces = np.array([np.array(f) for f in faces])
 
     def paintGL(self) -> None:
-        # vertexes = self.vertexes @ self.render.camera.camera_matrix()
-        # vertexes = vertexes @ self.render.projection.projection_matrix
-        # vertexes /= vertexes[:, -1:].reshape(-1, 1)
-        # vertexes[(vertexes > 2) | (vertexes < -2)] = 0
-        # # self.vertexes = vertexes
-        # self.vertexes = vertexes @ self.render.projection.to_screen_matrix
-        # self.vertexes = self.vertexes[:, :2]
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glPointSize(12)
-        glBegin(GL_POINTS)
-        glColor3f(0, 0, 0)
-        for vertex in self.vertexes:
+
+        painter = QPainter(self)
+        vertexes = self.vertexes @ self.render.camera.camera_matrix()
+        vertexes = vertexes @ self.render.projection.projection_matrix
+        vertexes /= vertexes[:, -1:].reshape(-1, 1)
+        vertexes[(vertexes > 2) | (vertexes < -2)] = 0
+        # self.vertexes = vertexes
+        self.vertexes = vertexes @ self.render.projection.to_screen_matrix
+        print(self.vertexes)
+        vertexes = self.vertexes[:, :2]
+        print(vertexes)
+        painter.setPen(QPen(Qt.black, 12.0))
+        for vertex in vertexes:
             if not any_func(vertex, self.render.H_WIDTH, self.render.H_HEIGHT):
                 print(vertex)
-                glVertex4fv(vertex)
-        glEnd()
-        glColor3f(0.3, 0.3, 0.3)
-        for face in self.faces:
-            polygon = self.vertexes[np.array([f - 1 for f in face])]
-            glBegin(GL_POLYGON)
-            if not any_func(polygon, self.render.H_WIDTH, self.render.H_HEIGHT):
-                for p in polygon:
-                    glVertex4fv(p)
-            glEnd()
-        glFlush()
+                painter.drawPoint(vertex[0], vertex[1])
+        # glEnd()
+        # glColor3f(0.3, 0.3, 0.3)
+        # for face in self.faces:
+        #     polygon = self.vertexes[np.array([f - 1 for f in face])]
+        #     glBegin(GL_POLYGON)
+        #     if not any_func(polygon, self.render.H_WIDTH, self.render.H_HEIGHT):
+        #         for p in polygon:
+        #             glVertex4fv(p)
+        #     glEnd()
+        # glFlush()
 
         # glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         # glPointSize(12)
