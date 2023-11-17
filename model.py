@@ -19,7 +19,6 @@ class Model(QOpenGLWidget):
         self.render = render
         self.vertexes = np.array([np.array(v + [1]) for v in vertexes])
         self.faces = np.array([np.array(f) for f in faces])
-        print(self.size())
 
     def paintGL(self) -> None:
         painter = QPainter(self)
@@ -71,6 +70,26 @@ class Model(QOpenGLWidget):
         #         glVertex4fv(self.vertexes[vertex - 1])
         # glEnd()
         # glFlush()
+
+    def paintGL2(self) -> None:
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        glPointSize(12)
+        glBegin(GL_POINTS)
+        glColor3f(0, 0, 0)
+        for vertex in self.vertexes:
+            if not any_func(vertex, self.render.H_WIDTH, self.render.H_HEIGHT):
+                print(vertex)
+                glVertex4fv(vertex)
+        glEnd()
+        glColor3f(0.3, 0.3, 0.3)
+        for face in self.faces:
+            polygon = self.vertexes[np.array([f - 1 for f in face])]
+            glBegin(GL_POLYGON)
+            if not any_func(polygon, self.render.H_WIDTH, self.render.H_HEIGHT):
+                for p in polygon:
+                    glVertex4fv(p)
+            glEnd()
+        glFlush()
 
     @staticmethod
     def paintCoordsSystem() -> None:
