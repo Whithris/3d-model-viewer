@@ -19,77 +19,40 @@ class Model(QOpenGLWidget):
         self.render = render
         self.vertexes = np.array([np.array(v + [1]) for v in vertexes])
         self.faces = np.array([np.array(f) for f in faces])
+        self.translate([0.0001, 0.0001, 0.0001])
+        self.needDrawing = True
+        self.resize(1600, 900)
 
     def paintGL(self) -> None:
-        painter = QPainter(self)
+        self.screen_projection()
+
+    def screen_projection(self):
+        if self.needDrawing:
+            vertexes = self.update_vertexes()
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+            glPointSize(12)
+            glBegin(GL_POINTS)
+            glColor3f(0, 0, 0)
+            for vertex in vertexes:
+                if not any_func(vertex, self.render.H_WIDTH, self.render.H_HEIGHT):
+                    glVertex4fv(vertex)
+            glEnd()
+            glColor3f(0.3, 0.3, 0.3)
+            for face in self.faces:
+                polygon = vertexes[np.array([f - 1 for f in face])]
+                glBegin(GL_POLYGON)
+                if not any_func(polygon, self.render.H_WIDTH, self.render.H_HEIGHT):
+                    for p in polygon:
+                        glVertex4fv(p)
+                glEnd()
+            glFlush()
+
+    def update_vertexes(self):
         vertexes = self.vertexes @ self.render.camera.camera_matrix()
         vertexes = vertexes @ self.render.projection.projection_matrix
         vertexes /= vertexes[:, -1:].reshape(-1, 1)
         vertexes[(vertexes > 2) | (vertexes < -2)] = 0
-        self.vertexes = vertexes
-        vertexes = vertexes @ self.render.projection.to_screen_matrix
-        vertexes = vertexes[:, :2]
-        painter.setPen(QPen(Qt.black, 12.0))
-        for vertex in vertexes:
-            if not any_func(vertex, self.render.WIDTH, self.render.HEIGHT):
-                print(vertex)
-                painter.drawPoint(vertex[0], vertex[1])
-        print('------------------------------------')
-        # for face in self.faces:
-        #     polygon = self.vertexes[np.array([f - 1 for f in face])]
-        #     if not any_func(polygon, self.render.H_WIDTH, self.render.H_HEIGHT):
-        #         for p in polygon:
-        #             glVertex4fv(p)
-
-        # glEnd()
-        # glColor3f(0.3, 0.3, 0.3)
-        # for face in self.faces:
-        #     polygon = self.vertexes[np.array([f - 1 for f in face])]
-        #     glBegin(GL_POLYGON)
-        #     if not any_func(polygon, self.render.H_WIDTH, self.render.H_HEIGHT):
-        #         for p in polygon:
-        #             glVertex4fv(p)
-        #     glEnd()
-        # glFlush()
-
-        # glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        # glPointSize(12)
-        # #self.paintCoordsSystem()
-        # glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        # glPointSize(12)
-        # #self.paintCoordsSystem()
-        # glBegin(GL_POINTS)
-        # glColor3f(0, 0, 0)
-        # for v in self.vertexes:
-        #     glVertex4fv(v)
-        # glEnd()
-        # glBegin(GL_POLYGON)
-        # for edge in self.faces[:-2]:
-        #     for vertex in edge:
-        #         glColor3f(0.3, 0.3, 0.3)
-        #         glVertex4fv(self.vertexes[vertex - 1])
-        # glEnd()
-        # glFlush()
-
-    def paintGL2(self) -> None:
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glPointSize(12)
-        glBegin(GL_POINTS)
-        glColor3f(0, 0, 0)
-        for vertex in self.vertexes:
-            if not any_func(vertex, self.render.H_WIDTH, self.render.H_HEIGHT):
-                print(vertex)
-                glVertex4fv(vertex)
-        glEnd()
-        glColor3f(0.3, 0.3, 0.3)
-        for face in self.faces:
-            polygon = self.vertexes[np.array([f - 1 for f in face])]
-            glBegin(GL_POLYGON)
-            if not any_func(polygon, self.render.H_WIDTH, self.render.H_HEIGHT):
-                for p in polygon:
-                    glVertex4fv(p)
-            glEnd()
-        glFlush()
+        return vertexes
 
     @staticmethod
     def paintCoordsSystem() -> None:
