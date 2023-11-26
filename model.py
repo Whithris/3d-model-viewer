@@ -5,13 +5,14 @@ from OpenGL.GLU import *
 from PySide6.QtGui import QPainter, QPen, QBrush
 from PySide6.QtCore import Qt
 import time
-
 import numpy as np
 import matrix_functions as mf
+from numba import njit
 
 
-def any_func(arr, a, b) -> bool:
-    return np.any(np.logical_or(arr == a, arr == b))
+@njit(fastmath=True)
+def any_func(arr, a, b):
+    return np.any((arr == a) | (arr == b))
 
 
 class Model(QOpenGLWidget):
@@ -21,67 +22,30 @@ class Model(QOpenGLWidget):
         self.vertexes = np.array([np.array(v + [1]) for v in vertexes])
         self.faces = np.array([np.array(f) for f in faces])
         self.translate([0.0001, 0.0001, 0.0001])
-        self.needDrawing = True
         self.resize(1600, 900)
 
     def paintGL(self) -> None:
         self.screen_projection()
-        self.rotate_y(1)
 
     def screen_projection(self):
-        if self.needDrawing:
-            vertexes = self.update_vertexes()
-            start = time.time()
-            anyfunctime = 0
-            glvertex4fvtime = 0
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-            glPointSize(12)
-            glBegin(GL_POINTS)
-            glColor3f(0, 0, 0)
-            for vertex in vertexes:
-                start_anyfunc = time.time()
-                if not any_func(vertex, self.render.H_WIDTH, self.render.H_HEIGHT):
-                    end_anyfunc = time.time()
-                    anyfunctime += (end_anyfunc - start_anyfunc) * 10 ** 3
-                    start_glvertex4fv = time.time()
-                    glVertex4fv(vertex)
-                    end_glvertex4fv = time.time()
-                    glvertex4fvtime +=  (end_glvertex4fv - start_glvertex4fv) * 10 ** 3
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        glPointSize(12)
+        glBegin(GL_POINTS)
+        glColor3f(0, 0, 0)
+        for vertex in self.vertexes:
+            if not any_func(vertex, self.render.H_WIDTH, self.render.H_HEIGHT):
+                glVertex4fv(vertex)
+        glEnd()
+        glColor3f(0.3, 0.3, 0.3)
+        for face in self.faces:
+            polygon = self.vertexes[np.array([f - 1 for f in face])]
+            glBegin(GL_POLYGON)
+            if not any_func(polygon, self.render.H_WIDTH, self.render.H_HEIGHT):
+                for p in polygon:
+                    glVertex4fv(p)
             glEnd()
-            glColor3f(0.3, 0.3, 0.3)
-            for face in self.faces:
-                polygon = vertexes[np.array([f - 1 for f in face])]
-
-                glBegin(GL_POLYGON)
-                start_anyfunc = time.time()
-                if not any_func(polygon, self.render.H_WIDTH, self.render.H_HEIGHT):
-                    end_anyfunc = time.time()
-                    anyfunctime += (end_anyfunc - start_anyfunc) * 10 ** 3
-                    for p in polygon:
-                        start_glvertex4fv = time.time()
-                        glVertex4fv(p)
-                        end_glvertex4fv = time.time()
-                        glvertex4fvtime += (end_glvertex4fv - start_glvertex4fv) * 10 ** 3
-                glEnd()
-            end = time.time()
-            print("glvertex4fv time is ", glvertex4fvtime, " ms")
-            print("Anyfunc time is ", anyfunctime, " ms")
-            if (end - start) * 10 ** 3 > 0.1:
-                print("The time of OpenGL is",
-                      (end - start) * 10 ** 3, "ms")
-            glFlush()
-
-    def update_vertexes(self):
-        start = time.time()
-        vertexes = self.vertexes @ self.render.camera.camera_matrix()
-        vertexes = vertexes @ self.render.projection.projection_matrix
-        vertexes /= vertexes[:, -1:].reshape(-1, 1)
-        vertexes[(vertexes > 2) | (vertexes < -2)] = 0
-        end = time.time()
-        if (end - start) * 10 ** 3 > 0.1:
-            print("The time of vertex calculations is",
-                  (end - start) * 10 ** 3, "ms")
-        return vertexes
+        glFlush()
 
     @staticmethod
     def paintCoordsSystem() -> None:
