@@ -1,8 +1,5 @@
 from model import Model
 
-from camera import *
-from projection import *
-
 
 def read_obj_file(filepath: str, render) -> Model:
     vertexes = []

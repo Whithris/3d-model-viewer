@@ -1,7 +1,3 @@
-from PySide6.QtWidgets import *
-from PySide6.QtGui import QIcon, QAction, QKeyEvent, QScreen
-from PySide6.QtCore import *
-
 from model_loader import read_obj_file
 from camera import *
 from projection import *

@@ -1,6 +1,4 @@
 from matrix_functions import *
-from PySide6.QtGui import QKeyEvent
-from PySide6.QtCore import Qt
 from math import pi
 import taichi as ti
 
