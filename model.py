@@ -11,10 +11,10 @@ class Model:
     def __init__(self, render, vertexes, faces):
         super().__init__()
         self.render = render
-        self.vertexes = np.array([np.array(v + [1]) for v in vertexes])
-        self.faces = np.array([np.array(f) for f in faces])
+        self.vertexes = vertexes
+        self.faces = faces
 
-    def calculate_vertices(self) -> np.ndarray:
+    def calculate_vertices(self):
         vertices = self.vertexes @ self.render.camera.camera_matrix()
         vertices = vertices @ self.render.projection.projection_matrix
         vertices /= vertices[:, -1].reshape(-1, 1)
@@ -27,16 +27,16 @@ class Model:
                 vertices[i] = (vertex[0] / self.render.WIDTH, vertex[1] / self.render.HEIGHT)
         return vertices
 
-    def calculate_polygons(self, vertices: np.ndarray) -> list[np.ndarray, np.ndarray, np.ndarray]:
+    def calculate_polygons(self, vertices):
         polygons_a = []
         polygons_b = []
         polygons_c = []
         for face in self.faces:
-            polygon = vertices[np.array([f - 1 for f in face])]
+            polygon = vertices[ti.Matrix([f - 1 for f in face]), ti.f32]
             polygons_a.append(polygon[0])
             polygons_b.append(polygon[1])
             polygons_c.append(polygon[2])
-        return [np.array(polygons_a), np.array(polygons_b), np.array(polygons_c)]
+        return [ti.Matrix(polygons_a, ti.f32), ti.Matrix(polygons_b, ti.f32), ti.Matrix(polygons_c, ti.f32)]
 
     def translate(self, pos):  # перемещения
         self.vertexes = self.vertexes @ mf.translate(pos)  # умножение матриц (вершины на матрицу перемещения)

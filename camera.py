@@ -6,10 +6,10 @@ import taichi as ti
 class Camera(object):
     def __init__(self, render, position):
         self.render = render
-        self.position = np.array([*position, 1.0])
-        self.forward = np.array([0, 0, 1, 1])
-        self.up = np.array([0, 1, 0, 1])
-        self.right = np.array([1, 0, 0, 1])
+        self.position = ti.Matrix([*position, 1.0], ti.f32)
+        self.forward = ti.Matrix([0, 0, 1, 1], ti.f32)
+        self.up = ti.Matrix([0, 1, 0, 1], ti.f32)
+        self.right = ti.Matrix([1, 0, 0, 1], ti.f32)
         self.h_fov = pi / 3
         self.v_fov = self.h_fov * (render.HEIGHT / render.WIDTH)
         self.near_plane = 0.1
@@ -50,9 +50,9 @@ class Camera(object):
         self.anglePitch += angle
 
     def axiiIdentity(self):
-        self.forward = np.array([0, 0, 1, 1])
-        self.up = np.array([0, 1, 0, 1])
-        self.right = np.array([1, 0, 0, 1])
+        self.forward = ti.Matrix([0, 0, 1, 1], ti.f32)
+        self.up = ti.Matrix([0, 1, 0, 1], ti.f32)
+        self.right = ti.Matrix([1, 0, 0, 1], ti.f32)
 
     def camera_update_axii(self):
         # rotate = rotate_y(self.angleYaw) @ rotate_x(self.anglePitch)
@@ -68,20 +68,20 @@ class Camera(object):
 
     def translate_matrix(self):
         x, y, z, w = self.position
-        return np.array([
+        return ti.Matrix([
             [1, 0, 0, 0],
             [0, 1, 0, 0],
             [0, 0, 1, 0],
             [-x, -y, -z, 1]
-        ])
+        ], ti.f32)
 
     def rotate_matrix(self):
         rx, ry, rz, w = self.right
         fx, fy, fz, w = self.forward
         ux, uy, uz, w = self.up
-        return np.array([
+        return ti.Matrix([
             [rx, ux, fx, 0],
             [ry, uy, fy, 0],
             [rz, uz, fz, 0],
             [0, 0, 0, 1]
-        ])
+        ], ti.f32)

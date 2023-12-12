@@ -1,4 +1,5 @@
 from model import Model
+import taichi as ti
 
 
 def read_obj_file(filepath: str, render) -> Model:
@@ -42,4 +43,4 @@ def read_obj_file(filepath: str, render) -> Model:
                 else:
                     norms.append(0)
             faces.append(face)
-    return Model(render, vertexes, faces)
+    return Model(render, ti.Matrix([(v + [1]) for v in vertexes], ti.f32), ti.Matrix(faces, ti.f32))
