@@ -17,12 +17,13 @@ class Model:
     def calculate_vertices(self):
         vertices = self.vertexes @ self.render.camera.camera_matrix()
         vertices = vertices @ self.render.projection.projection_matrix
-        vertices /= vertices[:, -1].reshape(-1, 1)
-        vertices[(vertices > 2) | (vertices < -2)] = 0
-        vertices = vertices @ self.render.projection.to_screen_matrix
-        vertices = vertices[:, :2]
         for i in range(len(vertices)):
-            vertex = vertices[i]
+            x, y, z, w = vertices[i, :]
+            vertices[i, :] = x/w, y/w, z/w, w/w
+        vertices = vertices @ self.render.projection.to_screen_matrix
+        vertices = vertices[:, :2]  # не работает
+        for i in range(len(vertices)):
+            vertex = vertices[i, :]
             if not any_func(vertex, self.render.H_WIDTH, self.render.H_HEIGHT):
                 vertices[i] = (vertex[0] / self.render.WIDTH, vertex[1] / self.render.HEIGHT)
         return vertices
