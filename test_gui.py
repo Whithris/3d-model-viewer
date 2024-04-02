@@ -1,31 +1,49 @@
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QTimer, Qt
 import sys
-from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QWidget, QGridLayout
-from PySide6.QtGui import QAction, QIcon
+from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QWidget, QGridLayout, QVBoxLayout, QLabel
+from PySide6.QtGui import QAction, QIcon, QFont
 from pathlib import Path
 import os
 from test import MyOpenGl
 
 
-class LayersWidget(QWidget):
-    def __init__(self):
+class AdditionalWidget(QWidget):
+    def __init__(self, size_x, size_y):
         super().__init__()
-        self.resize(150, 200)
-        self.setWindowTitle('Layers')
+        self.resize(size_x, size_y)
+        self.old_pos = None
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+        self.label = QLabel('')
+        layout.addWidget(self.label)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.old_pos = event.globalPos()
+
+    def mouseMoveEvent(self, event):
+        if self.old_pos is not None:
+            delta = event.globalPos() - self.old_pos
+            self.move(self.pos() + delta)
+            self.old_pos = event.globalPos()
+
+    def mouseReleaseEvent(self, event):
+        self.old_pos = None
 
 
-class ObjectListWidget(QWidget):
+class LayersWidget(AdditionalWidget):
     def __init__(self):
-        super().__init__()
-        self.resize(150, 200)
-        self.setWindowTitle('Layers')
+        super().__init__(150, 200)
 
 
-class PropertiesWidget(QWidget):
+class ObjectListWidget(AdditionalWidget):
     def __init__(self):
-        super().__init__()
-        self.resize(150, 200)
-        self.setWindowTitle('Layers')
+        super().__init__(150, 200)
+
+
+class PropertiesWidget(AdditionalWidget):
+    def __init__(self):
+        super().__init__(150, 200)
 
 
 class Window(QMainWindow):
@@ -43,11 +61,11 @@ class Window(QMainWindow):
         self.gl_widget = MyOpenGl(self)
         central_layout.addWidget(self.gl_widget, 0, 1, 2, 2)
 
-        self.layers_widget = LayersWidget()
-        central_layout.addWidget(self.layers_widget, 0, 0)
-        self.objectlist_widget = ObjectListWidget()
-        central_layout.addWidget(self.layers_widget, 0, 3)
         self.properties_widget = PropertiesWidget()
+        self.objectlist_widget = ObjectListWidget()
+        self.layers_widget = LayersWidget()
+        central_layout.addWidget(self.properties_widget, 0, 0)
+        central_layout.addWidget(self.objectlist_widget, 0, 3)
         central_layout.addWidget(self.layers_widget, 1, 3)
 
         self.actions = self.init_actions()
@@ -157,6 +175,12 @@ QMenuBar::item:selected, QMenu::item:selected{
 }
 QStatusBar {
         color: #FFFFFF
+}
+QLabel {
+        background-color: #404040;
+        color: #FFFFFF;
+        font-family: Roboto;
+        font-size: 14px;
 }
 """
 
