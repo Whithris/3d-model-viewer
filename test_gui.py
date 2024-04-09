@@ -1,15 +1,17 @@
-from PySide6.QtCore import QTimer, Qt
+from PySide6.QtCore import QTimer, Qt, Slot
 import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QWidget, QGridLayout, QVBoxLayout, QLabel
 from PySide6.QtGui import QAction, QIcon, QFont
 from pathlib import Path
 import os
 from test import MyOpenGl
+from settings import STYLE_SHEET
 
 
 class AdditionalWidget(QWidget):
     def __init__(self, size_x, size_y):
         super().__init__()
+        self.hide()
         self.resize(size_x, size_y)
         self.old_pos = None
         layout = QVBoxLayout()
@@ -29,6 +31,12 @@ class AdditionalWidget(QWidget):
 
     def mouseReleaseEvent(self, event):
         self.old_pos = None
+
+    def view(self):
+        if self.isVisible():
+            self.hide()
+        else:
+            self.show()
 
 
 class LayersWidget(AdditionalWidget):
@@ -75,7 +83,7 @@ class Window(QMainWindow):
 
         central_widget.setLayout(central_layout)
 
-    def create_menu_action(self, name, icon, shortcut, tip, connect):
+    def create_menu_action(self, name, icon, shortcut, tip, connect=None):
         action = QAction(icon, f'&{name}', self)
         action.setShortcut(shortcut)
         action.setStatusTip(tip)
@@ -88,15 +96,20 @@ class Window(QMainWindow):
         exit_action = self.create_menu_action('Выход', QIcon(os.path.join(self.path, 'images', 'exit.png')),
                                               'Ctrl+Q', 'Выход из программы', self.close)
         view_light_action = self.create_menu_action('Освещение', QIcon(), 'F3',
-                                                    'Отображение освещения модели', self.view_light)
+                                                    'Отображение освещения модели', None)
         view_shadow_action = self.create_menu_action('Тени', QIcon(), 'F4',
-                                                     'Отображение теней модели', self.view_shadows)
+                                                     'Отображение теней модели', None)
         view_properties_action = self.create_menu_action('Настройка объекта', QIcon(), 'F5',
-                                                         'Отображение настройки объекта', self.view_properties)
+                                                         'Отображение настройки объекта')
+        view_properties_action.triggered.connect(lambda: self.view_widget(view_properties_action,
+                                                                          self.properties_widget))
         view_objectlist_action = self.create_menu_action('Список объектов', QIcon(), 'F6',
-                                                         'Отображение списка объектов', self.view_objectlist)
-        view_layers_action = self.create_menu_action('Слои', QIcon(), 'F7',
-                                                     'Отображение слоев', self.view_layers)
+                                                         'Отображение списка объектов')
+        view_objectlist_action.triggered.connect(lambda: self.view_widget(view_objectlist_action,
+                                                                          self.objectlist_widget))
+        view_layers_action = self.create_menu_action('Слои', QIcon(), 'F7', 'Отображение слоев')
+        view_layers_action.triggered.connect(lambda: self.view_widget(view_layers_action,
+                                                                      self.layers_widget))
         return [open_action, exit_action, view_light_action, view_shadow_action, view_properties_action,
                 view_objectlist_action, view_layers_action]
 
@@ -132,57 +145,13 @@ class Window(QMainWindow):
             except OSError as err:
                 self.statusBar().showMessage(err)
 
-    def change_action_status(self, action):
+    def view_widget(self, action, widget):
+        widget.view()
         if QIcon.isNull(action.icon()):
             action.setIcon(QIcon(os.path.join(self.path, 'images', 'done.png')))
             return True
         action.setIcon(QIcon())
         return False
-
-    def view_light(self):
-        # status = self.change_action_status(self.view_light_action)
-        pass
-
-    def view_shadows(self):
-        # status = self.change_action_status(self.view_shadow_action)
-        pass
-
-    def view_properties(self):
-        # status = self.change_action_status(self.view_properties_action)
-        pass
-
-    def view_objectlist(self):
-        # status = self.change_action_status(self.view_objectlist_action)
-        pass
-
-    def view_layers(self):
-        # status = self.change_action_status(self.view_layers_action)
-        pass
-
-
-STYLE_SHEET = """
-QMainWindow {
-        background-color: #282828
-}
-QMenuBar, QMenu{
-        background-color: #404040;
-        color: #FFFFFF;
-        font-family: Roboto;
-        font-size: 14px;
-}
-QMenuBar::item:selected, QMenu::item:selected{
-        background-color: #505050;
-}
-QStatusBar {
-        color: #FFFFFF
-}
-QLabel {
-        background-color: #404040;
-        color: #FFFFFF;
-        font-family: Roboto;
-        font-size: 14px;
-}
-"""
 
 
 def main():
