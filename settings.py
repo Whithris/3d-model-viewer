@@ -15,12 +15,21 @@ QMenuBar::item:selected, QMenu::item:selected, QPushButton::item:selected{
         background-color: #505050;
 }
 QStatusBar {
-        color: #FFFFFF
+        color: #FFFFFF;
+        font-family: Roboto;
+        font-size: 14px;
 }
 QPushButton {
         background-color: #282828
 }
+QToolBar {
+        background-color: #404040;
+        color: #FFFFFF;
+        font-family: Roboto;
+        font-size: 14px;
+        border-radius: 2px;
+}
 """
 PATH = Path(__file__).resolve().parent
-width, height = 900, 700
+width, height = 800, 600
 movable_widgets = False
