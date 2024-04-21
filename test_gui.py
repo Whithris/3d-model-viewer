@@ -10,30 +10,32 @@ import settings
 
 
 class AdditionalWidget(QWidget):
-    def __init__(self, size_x, size_y):
-        super().__init__()
+    def __init__(self,  size_x, size_y,parent=None):
+        super().__init__(parent)
         self.hide()
         self.setFixedSize(size_x, size_y)
         self.old_pos = None
         self.init_ui()
 
     def mousePressEvent(self, event):
-        if settings.movable_widgets:
-            if event.button() == Qt.MouseButton.LeftButton:
-                p = event.globalPosition()
-                global_pos = p.toPoint()
-                self.old_pos = global_pos
+        if settings.movable_widgets and event.button() == Qt.MouseButton.LeftButton:
+            # Используем position().toPoint() для получения координат клика мыши
+            if self.menu_layout.geometry().contains(event.position().toPoint()):
+                self.old_pos = event.globalPosition().toPoint()
 
     def mouseMoveEvent(self, event):
-        if self.old_pos is not None:
-            p = event.globalPosition()
-            global_pos = p.toPoint()
-            delta = global_pos - self.old_pos
-            self.move(self.pos() + delta)
-            self.old_pos = global_pos
+        if self.old_pos:
+            new_pos = self.pos() + event.globalPosition().toPoint() - self.old_pos
+            # Ограничиваем перемещение внутри границ MainWindow
+            new_pos.setX(max(min(new_pos.x(), self.parent().width() - self.width()), 0))
+            new_pos.setY(max(min(new_pos.y(), self.parent().height() - self.height()), 0))
+            self.move(new_pos)
+            self.old_pos = event.globalPosition().toPoint()
 
     def mouseReleaseEvent(self, event):
         self.old_pos = None
+
+
 
     def view(self):
         if self.isVisible():
@@ -42,17 +44,20 @@ class AdditionalWidget(QWidget):
             self.show()
 
     def init_ui(self):
-        layout = QVBoxLayout()
+        layout = QVBoxLayout(self)
         layout.setSpacing(0)
-        self.setLayout(layout)
 
-        menu_layout = QHBoxLayout()
+        # Создаем область с кнопкой скрытия и возможностью перетаскивания
+        self.menu_layout = QHBoxLayout()
+        self.menu_layout.addStretch()  # Добавляем растягивающийся элемент для заполнения оставшегося пространства
+
         exit_button = QPushButton('', self)
         exit_button.setIcon(QIcon(os.path.join(settings.PATH, 'images', 'minimize.png')))
-        exit_button.clicked.connect(self.view)
-        menu_layout.addWidget(exit_button)
-        layout.addLayout(menu_layout)
-        label = QLabel('')
+        # exit_button.clicked.connect(self.view)
+        self.menu_layout.addWidget(exit_button)
+        
+        layout.addLayout(self.menu_layout)
+        label = QLabel('', self)  # Пример метки
         layout.addWidget(label)
 
 
@@ -100,8 +105,8 @@ class Settings(QWidget):
 
 
 class LayersWidget(AdditionalWidget):
-    def __init__(self, pos):
-        super().__init__(200, 250)
+    def __init__(self, pos,parent):
+        super().__init__(200, 250,parent)
 
     def view(self):
         super().view()
@@ -113,8 +118,8 @@ class LayersWidget(AdditionalWidget):
 
 
 class ObjectListWidget(AdditionalWidget):
-    def __init__(self, pos):
-        super().__init__(200, 250)
+    def __init__(self, pos,parent):
+        super().__init__(200, 250,parent)
 
     def view(self):
         super().view()
@@ -126,8 +131,8 @@ class ObjectListWidget(AdditionalWidget):
 
 
 class PropertiesWidget(AdditionalWidget):
-    def __init__(self, pos):
-        super().__init__(200, 250)
+    def __init__(self, pos,parent):
+        super().__init__(200, 250,parent)
 
     def view(self):
         super().view()
@@ -149,9 +154,9 @@ class Window(QMainWindow):
 
         self.settings_widget = Settings(self)
 
-        self.properties_widget = PropertiesWidget((0, 0))
-        self.objectlist_widget = ObjectListWidget(QPoint(1000, 1000))
-        self.layers_widget = LayersWidget(QPoint(500, 0))
+        self.properties_widget = PropertiesWidget((0, 0),self)
+        self.objectlist_widget = ObjectListWidget(QPoint(1000, 1000),self)
+        self.layers_widget = LayersWidget(QPoint(500, 0),self)
         central_layout.addWidget(self.properties_widget, 0, 0)
         central_layout.addWidget(self.objectlist_widget, 0, 2)
         central_layout.addWidget(self.layers_widget, 2, 2)
