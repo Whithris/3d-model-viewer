@@ -1,4 +1,4 @@
-from PySide6.QtCore import QTimer, Qt, QPoint
+from PySide6.QtCore import QTimer, Qt, QPoint, QSize
 import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QWidget, QGridLayout, QVBoxLayout, QLabel, \
     QPushButton, QHBoxLayout, QCheckBox, QComboBox, QToolBar, QToolButton, QSizePolicy
@@ -14,6 +14,8 @@ class AdditionalWidget(QWidget):
         super().__init__(parent)
         self.hide()
         self.setMinimumSize(size_x, size_y)
+        self.w = size_x
+        self.h = size_y
         self.setFixedSize(size_x, size_y)
         self.old_pos = None
         self.movable = True
@@ -40,10 +42,10 @@ class AdditionalWidget(QWidget):
     def change_movability(self):
         if self.movable:
             self.movable = False
-            self.pin_button.setDown(True)
+            self.menu_layout_widgets[1].setDown(True)  # положение pin_button
         else:
             self.movable = True
-            self.pin_button.setDown(False)
+            self.menu_layout_widgets[1].setDown(False)
 
     def view(self):
         if self.isVisible():
@@ -58,28 +60,33 @@ class AdditionalWidget(QWidget):
         # Создаем область с кнопкой скрытия и возможностью перетаскивания
         self.menu_layout = QHBoxLayout()
         self.menu_layout.setSpacing(0)
-        self.menu_layout.addStretch()  # Добавляем растягивающийся элемент для заполнения оставшегося пространства
+        self.menu_layout_widgets = []
 
         exit_button = QPushButton(self)
-        exit_button.setFixedSize(35, 25)
+        exit_button.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed))
+        exit_button.setMinimumSize(round(self.width()*0.1), round(self.height()*0.1))
         exit_button.setIcon(QIcon(os.path.join(settings.PATH, 'images', 'exit.png')))
         exit_button.clicked.connect(self.view)
         exit_button.setStatusTip('Закрыть окно')
 
-        self.pin_button = QPushButton(self)
-        self.pin_button.setFixedSize(35, 25)
-        self.pin_button.setIcon(QIcon(os.path.join(settings.PATH, 'images', 'pin.png')))
-        self.pin_button.clicked.connect(self.change_movability)
-        self.pin_button.setStatusTip('Закрепить окно')
+        pin_button = QPushButton(self)
+        pin_button.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed))
+        pin_button.setMinimumSize(round(self.width()*0.1), round(self.height()*0.1))
+        pin_button.setIcon(QIcon(os.path.join(settings.PATH, 'images', 'pin.png')))
+        pin_button.clicked.connect(self.change_movability)
+        pin_button.setStatusTip('Закрепить окно')
 
         toolbar_stretch = QLabel(self)
-        toolbar_stretch.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed))
-        toolbar_stretch.setFixedSize(112, 25)
+        toolbar_stretch.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred))
+        toolbar_stretch.setMinimumSize(round(self.width()*0.6), round(self.height()*0.1))
         toolbar_stretch.setStyleSheet('background-color: #282828')
 
-        self.menu_layout.addWidget(toolbar_stretch)
-        self.menu_layout.addWidget(self.pin_button)
-        self.menu_layout.addWidget(exit_button)
+        self.menu_layout_widgets.append(toolbar_stretch)
+        self.menu_layout_widgets.append(pin_button)
+        self.menu_layout_widgets.append(exit_button)
+        for w in self.menu_layout_widgets:
+            self.menu_layout.addWidget(w)
+
         layout.addLayout(self.menu_layout)
         label = QLabel('', self)  # Пример метки
         layout.addWidget(label)
