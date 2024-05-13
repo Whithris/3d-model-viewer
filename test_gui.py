@@ -1,8 +1,8 @@
 from PySide6.QtCore import QTimer, Qt, QPoint
 import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QWidget, QGridLayout, QVBoxLayout, QLabel, \
-    QPushButton, QHBoxLayout, QCheckBox, QComboBox, QToolBar
-from PySide6.QtGui import QAction, QIcon
+    QPushButton, QHBoxLayout, QCheckBox, QComboBox, QToolBar, QToolButton, QSizePolicy
+from PySide6.QtGui import QAction, QIcon, QPixmap
 
 import os
 from test import MyOpenGl
@@ -10,15 +10,17 @@ import settings
 
 
 class AdditionalWidget(QWidget):
-    def __init__(self,  size_x, size_y,parent=None):
+    def __init__(self, size_x, size_y, parent=None):
         super().__init__(parent)
         self.hide()
+        self.setMinimumSize(size_x, size_y)
         self.setFixedSize(size_x, size_y)
         self.old_pos = None
+        self.movable = True
         self.init_ui()
 
     def mousePressEvent(self, event):
-        if settings.movable_widgets and event.button() == Qt.MouseButton.LeftButton:
+        if self.movable and event.button() == Qt.MouseButton.LeftButton:
             # Используем position().toPoint() для получения координат клика мыши
             if self.menu_layout.geometry().contains(event.position().toPoint()):
                 self.old_pos = event.globalPosition().toPoint()
@@ -35,7 +37,13 @@ class AdditionalWidget(QWidget):
     def mouseReleaseEvent(self, event):
         self.old_pos = None
 
-
+    def change_movability(self):
+        if self.movable:
+            self.movable = False
+            self.pin_button.setDown(True)
+        else:
+            self.movable = True
+            self.pin_button.setDown(False)
 
     def view(self):
         if self.isVisible():
@@ -49,13 +57,29 @@ class AdditionalWidget(QWidget):
 
         # Создаем область с кнопкой скрытия и возможностью перетаскивания
         self.menu_layout = QHBoxLayout()
+        self.menu_layout.setSpacing(0)
         self.menu_layout.addStretch()  # Добавляем растягивающийся элемент для заполнения оставшегося пространства
 
-        exit_button = QPushButton('', self)
-        exit_button.setIcon(QIcon(os.path.join(settings.PATH, 'images', 'minimize.png')))
-        # exit_button.clicked.connect(self.view)
+        exit_button = QPushButton(self)
+        exit_button.setFixedSize(35, 25)
+        exit_button.setIcon(QIcon(os.path.join(settings.PATH, 'images', 'exit.png')))
+        exit_button.clicked.connect(self.view)
+        exit_button.setStatusTip('Закрыть окно')
+
+        self.pin_button = QPushButton(self)
+        self.pin_button.setFixedSize(35, 25)
+        self.pin_button.setIcon(QIcon(os.path.join(settings.PATH, 'images', 'pin.png')))
+        self.pin_button.clicked.connect(self.change_movability)
+        self.pin_button.setStatusTip('Закрепить окно')
+
+        toolbar_stretch = QLabel(self)
+        toolbar_stretch.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed))
+        toolbar_stretch.setFixedSize(112, 25)
+        toolbar_stretch.setStyleSheet('background-color: #282828')
+
+        self.menu_layout.addWidget(toolbar_stretch)
+        self.menu_layout.addWidget(self.pin_button)
         self.menu_layout.addWidget(exit_button)
-        
         layout.addLayout(self.menu_layout)
         label = QLabel('', self)  # Пример метки
         layout.addWidget(label)
@@ -82,17 +106,19 @@ class Settings(QWidget):
         resolution_combobox.currentTextChanged.connect(self.resize_window)
         resolution_change_layout.addWidget(resolution_combobox)
 
-        movable_widgets_checkbox = QCheckBox("Движимость виджетов")
-        self.checkboxes.append(movable_widgets_checkbox)
-        movable_widgets_checkbox.stateChanged.connect(self.movable_widgets_checkbox_changed)
+        # movable_widgets_checkbox = QCheckBox("Движимость виджетов")
+        # movable_widgets_checkbox.nextCheckState()
+        # self.checkboxes.append(movable_widgets_checkbox)
+        # movable_widgets_checkbox.stateChanged.connect(self.movable_widgets_checkbox_changed)
 
         layout = QVBoxLayout()
         self.setLayout(layout)
         layout.addLayout(resolution_change_layout)
-        layout.addWidget(movable_widgets_checkbox)
+        # layout.addWidget(movable_widgets_checkbox)
 
-    def movable_widgets_checkbox_changed(self):
-        settings.movable_widgets = self.checkboxes[0].isChecked()
+    #
+    # def movable_widgets_checkbox_changed(self):
+    #     settings.movable_widgets = self.checkboxes[0].isChecked()
 
     def resize_window(self, resolution):
         if 'x' in resolution:
@@ -105,8 +131,8 @@ class Settings(QWidget):
 
 
 class LayersWidget(AdditionalWidget):
-    def __init__(self, pos,parent):
-        super().__init__(200, 250,parent)
+    def __init__(self, pos, parent):
+        super().__init__(200, 250, parent)
 
     def view(self):
         super().view()
@@ -118,8 +144,8 @@ class LayersWidget(AdditionalWidget):
 
 
 class ObjectListWidget(AdditionalWidget):
-    def __init__(self, pos,parent):
-        super().__init__(200, 250,parent)
+    def __init__(self, pos, parent):
+        super().__init__(200, 250, parent)
 
     def view(self):
         super().view()
@@ -131,8 +157,8 @@ class ObjectListWidget(AdditionalWidget):
 
 
 class PropertiesWidget(AdditionalWidget):
-    def __init__(self, pos,parent):
-        super().__init__(200, 250,parent)
+    def __init__(self, pos, parent):
+        super().__init__(200, 250, parent)
 
     def view(self):
         super().view()
@@ -147,6 +173,7 @@ class Window(QMainWindow):
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
+
         central_layout = QGridLayout()
 
         self.gl_widget = MyOpenGl(self)
@@ -154,9 +181,9 @@ class Window(QMainWindow):
 
         self.settings_widget = Settings(self)
 
-        self.properties_widget = PropertiesWidget((0, 0),self)
-        self.objectlist_widget = ObjectListWidget(QPoint(1000, 1000),self)
-        self.layers_widget = LayersWidget(QPoint(500, 0),self)
+        self.properties_widget = PropertiesWidget((0, 0), self)
+        self.objectlist_widget = ObjectListWidget(QPoint(1000, 1000), self)
+        self.layers_widget = LayersWidget(QPoint(500, 0), self)
         central_layout.addWidget(self.properties_widget, 0, 0)
         central_layout.addWidget(self.objectlist_widget, 0, 2)
         central_layout.addWidget(self.layers_widget, 2, 2)
@@ -173,7 +200,8 @@ class Window(QMainWindow):
 
     def create_menu_action(self, name, icon, shortcut, tip, connect=None):
         action = QAction(icon, f'&{name}', self)
-        if shortcut != '': action.setShortcut(shortcut)
+        if shortcut != '':
+            action.setShortcut(shortcut)
         action.setStatusTip(tip)
         action.triggered.connect(connect)
         self.actions.append(action)
@@ -228,13 +256,13 @@ class Window(QMainWindow):
                                                         QIcon(os.path.join(settings.PATH, 'images', 'object.png')),
                                                         '', 'Выбор объекта для редактирования')
         move_object_actions = self.create_menu_action('Движение объекта',
-                                                        QIcon(os.path.join(settings.PATH, 'images', 'move.png')),
-                                                        '', 'Движение выбранного объекта')
+                                                      QIcon(os.path.join(settings.PATH, 'images', 'move.png')),
+                                                      '', 'Движение выбранного объекта')
         resize_object_actions = self.create_menu_action('Масштабирование объекта',
                                                         QIcon(os.path.join(settings.PATH, 'images', 'resize.png')),
                                                         '', 'Масштабирование выбранного объекта')
         minimize_action = self.create_menu_action('Свернуть',
-                                                  QIcon(os.path.join(settings.PATH, 'images', 'minimize.png')),
+                                                  QIcon(os.path.join(settings.PATH, 'images', 'exit.png')),
                                                   '', 'Свернуть панель инструментов')
         minimize_action.triggered.connect(lambda: self.toolbar.hide())
 

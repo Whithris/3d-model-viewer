@@ -1,2 +1,5 @@
 numpy~=1.26.1
 taichi~=1.7.0
+ipython~=8.22.2
+pyside6~=6.6.0
+pillow~=10.2.0
