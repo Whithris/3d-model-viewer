@@ -1,7 +1,7 @@
 from pathlib import Path
 
 STYLE_SHEET = """
-QMenuBar, QMenu, QPushButton, QLabel, QCheckBox {
+QMenuBar, QMenu, QPushButton, QLabel, QCheckBox{
         background-color: #404040;
         color: #FFFFFF;
         font-family: Roboto;

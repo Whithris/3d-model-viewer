@@ -1,7 +1,7 @@
 from PySide6.QtCore import QTimer, Qt, QPoint, QSize
 import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QWidget, QGridLayout, QVBoxLayout, QLabel, \
-    QPushButton, QHBoxLayout, QCheckBox, QComboBox, QToolBar, QToolButton, QSizePolicy
+    QPushButton, QHBoxLayout, QCheckBox, QComboBox, QToolBar, QToolButton, QSizePolicy, QSizeGrip
 from PySide6.QtGui import QAction, QIcon, QPixmap
 
 import os
@@ -13,10 +13,11 @@ class AdditionalWidget(QWidget):
     def __init__(self, size_x, size_y, parent=None):
         super().__init__(parent)
         self.hide()
-        self.setMinimumSize(size_x, size_y)
         self.w = size_x
         self.h = size_y
         self.setFixedSize(size_x, size_y)
+        print(self.width())
+        print(self.height())
         self.old_pos = None
         self.movable = True
         self.init_ui()
@@ -62,6 +63,10 @@ class AdditionalWidget(QWidget):
         self.menu_layout.setSpacing(0)
         self.menu_layout_widgets = []
 
+        # resize_button = QSizeGrip(self)
+        # resize_button.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed))
+        # resize_button.setMinimumSize(round(self.width() * 0.1), round(self.height() * 0.1))
+
         exit_button = QPushButton(self)
         exit_button.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed))
         exit_button.setMinimumSize(round(self.width()*0.1), round(self.height()*0.1))
@@ -78,7 +83,7 @@ class AdditionalWidget(QWidget):
 
         toolbar_stretch = QLabel(self)
         toolbar_stretch.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred))
-        toolbar_stretch.setMinimumSize(round(self.width()*0.6), round(self.height()*0.1))
+        toolbar_stretch.setMinimumSize(round(self.width()*0.5), round(self.height()*0.1))
         toolbar_stretch.setStyleSheet('background-color: #282828')
 
         self.menu_layout_widgets.append(toolbar_stretch)
@@ -86,9 +91,12 @@ class AdditionalWidget(QWidget):
         self.menu_layout_widgets.append(exit_button)
         for w in self.menu_layout_widgets:
             self.menu_layout.addWidget(w)
+            print(w, w.width(), w.height())
 
         layout.addLayout(self.menu_layout)
         label = QLabel('', self)  # Пример метки
+        label.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed))
+        label.setMinimumSize(0, round(self.height()*0.9))
         layout.addWidget(label)
 
 
